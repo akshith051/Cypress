@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Reports | Cypress</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .reports-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    .report-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 20px;
+      width: 300px;
+      font-size: 0.95rem;
+      position: relative;
+    }
+    .report-card h3 {
+      margin-bottom: 10px;
+      color: #2196f3;
+      text-transform: capitalize;
+    }
+    .report-card p {
+      margin: 5px 0;
+    }
+    .report-card span {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body class="reports">
+  <header>
+    <div class="container">
+      <h1>Cypress</h1>
+      <nav>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="report.html">Report Problem</a></li>
+          <li><a href="myreports.html">My Reports</a></li>
+          <li><a href="login.html">Sign Out</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h2>My Submitted Reports</h2>
+    <div id="reports" class="reports-list"></div>
+  </main>
+
+  <script>
+    const username = localStorage.getItem('username');
+    if (!username) {
+      window.location.href = 'login.html';
+    }
+
+    // Logout handler
+    const logoutLink = document.querySelector('a[href="login.html"]');
+    if (logoutLink) {
+      logoutLink.addEventListener('click', function (e) {
+        e.preventDefault();
+        localStorage.removeItem('username');
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+      });
+    }
+
+    async function loadReports() {
+      try {
+        console.log("Fetching reports for:", username);
+        const res = await fetch(`http://localhost:5000/report/user/${username}`);
+        const data = await res.json();
+        console.log('Response:', data);
+
+        const container = document.getElementById('reports');
+        container.innerHTML = '';
+
+        if (!Array.isArray(data) || data.length === 0) {
+          container.innerHTML = `<p>No reports submitted yet.</p>`;
+          return;
+        }
+
+        // Sort by latest
+        data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).forEach(report => {
+          const card = document.createElement('div');
+          card.className = 'report-card';
+          card.innerHTML = `
+            <h3>${report.issueType}</h3>
+            <p><span>Description:</span> ${report.description}</p>
+            <p><span>Location:</span> ${Number(report.lat).toFixed(5)}, ${Number(report.lng).toFixed(5)}</p>
+            <p><span>Status:</span> ${report.status || 'Pending'}</p>
+            <p><span>Submitted:</span> ${new Date(report.createdAt).toLocaleString()}</p>
+          `;
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error("❌ Error loading reports:", err);
+        document.getElementById('reports').innerHTML = '<p>Failed to load reports.</p>';
+      }
+    }
+
+    loadReports();
+  </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cypress - Home</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header Section -->
+  <header>
+    <div class="container">
+      <h1>Cypress</h1>
+      <nav>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="report.html">Report Problem</a></li>
+          <li><a href="myreports.html">My Reports</a></li>
+          <li><a href="login.html">Sign Out</a></li>
+        </ul>
+      </nav>      
+    </div>
+  </header>
+  
+  <!-- Main Content -->
+  <main class="container">
+    <section id="home">
+      <h2>Welcome to Cypress</h2>
+      <p>Automated Citizen Issue Reporting System</p>
+      <p>
+        This system allows you to report street problems, monitor the progress of the reported issue, and manage your reports.
+      </p>
+      <p>
+        Use the navigation above to access your account or click on "Report Problem" to submit an issue.
+      </p>
+    </section>
+  </main>
+  
+  <!-- Footer Section -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Cypress. All rights reserved.</p>
+    </div>
+  </footer>
+  <script>
+    // Check if user is logged in
+    const username = localStorage.getItem('username');
+  
+    if (!username) {
+      // Redirect to login page if not logged in
+      window.location.href = 'login.html';
+    } else {
+      // Add personalized welcome message
+      const homeSection = document.querySelector('#home');
+      const welcomeLine = document.createElement('p');
+      welcomeLine.innerHTML = `<strong>Welcome, ${username}!</strong>`;
+      homeSection.appendChild(welcomeLine);
+    }
+  
+    // Add logout functionality to "Sign Out" link
+    const logoutLink = document.querySelector('a[href="login.html"]');
+    if (logoutLink) {
+      logoutLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('username');
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+      });
+    }
+  </script>  
+</body>
+</html>

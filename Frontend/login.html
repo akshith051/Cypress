@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login | Cypress</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body class="login">
+  <div class="auth-container">
+    <!-- Left side (gradient) -->
+    <div class="auth-left">
+      <h2>Cypress</h2>
+      <p>Automated Citizen Issue Reporting System</p>
+    </div>
+
+    <!-- Right side (form) -->
+    <div class="auth-right">
+      <form id="loginForm" class="auth-form">
+        <h2>Login</h2>
+        <div class="input-box">
+          <input type="text" id="username" placeholder="Username" required>
+          <i class="bx bxs-user"></i>
+        </div>
+
+        <div class="input-box">
+          <input type="password" id="password" placeholder="Password" required>
+          <i class="bx bxs-lock-alt"></i>
+        </div>
+
+        <button type="submit" class="btn-submit">Login</button>
+        <div class="switch-form">
+          Don't have an account? <a href="signup.html">Register</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+  
+      try {
+        const res = await fetch('http://localhost:5000/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+  
+        const data = await res.json();
+  
+        if (!res.ok) {
+          alert(data.message || 'Login failed');
+          return;
+        }
+  
+        // Store session data
+        localStorage.setItem('username', data.username);
+        localStorage.setItem('token', data.token);
+  
+        alert(data.message);
+        window.location.href = 'index.html';
+      } catch (err) {
+        alert('Error connecting to server');
+        console.error(err);
+      }
+    });
+  </script>  
+</body>
+</html>

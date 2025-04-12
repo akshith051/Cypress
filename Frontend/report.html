@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cypress – Report an Issue</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="reports">
+  <!-- Header Section -->
+  <header>
+    <div class="container">
+      <h1>Cypress</h1>
+      <nav>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="report.html">Report Problem</a></li>
+          <li><a href="myreports.html">My Reports</a></li>
+          <li><a href="login.html">Sign Out</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  
+  <!-- Main Content Section -->
+  <main class="container">
+    <h1>Report Form</h1>
+    <p class="subtitle">Hello, <span id="usernameDisplay">Guest</span>! Help improve your community by reporting a street issue.</p>
+
+    <div class="report-sections">
+      <!-- Report Form Card -->
+      <form id="reportForm" class="card report-form-card">
+        <label for="issueType">Issue Type:</label>
+        <select id="issueType" name="issueType">
+          <option value="pothole">Pothole</option>
+          <option value="streetlight">Broken Streetlight</option>
+          <option value="graffiti">Graffiti</option>
+          <option value="garbage">Garbage</option>
+          <option value="other">Other</option>
+        </select>
+
+        <div id="customIssueContainer" style="display: none;">
+          <label for="customIssue">Please specify:</label>
+          <input type="text" id="customIssue" name="customIssue" placeholder="Type of issue...">
+        </div>
+
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" placeholder="Describe the issue..."></textarea>
+
+        <label>Pin the location:</label>
+        <div id="map" style="height:300px;"></div>
+        <input type="hidden" id="lat" name="lat">
+        <input type="hidden" id="lng" name="lng">
+
+        <label for="media">Upload Photo/Video:</label>
+        <input type="file" id="media" name="media">
+
+        <label><input type="checkbox" id="notify" name="notify"> Notify me when resolved</label>
+
+        <button type="submit">Submit Report</button>
+      </form>
+    </div>
+  </main>
+  
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const username = localStorage.getItem('username');
+    if (!username) {
+      window.location.href = 'login.html';
+    }
+
+    document.getElementById('usernameDisplay').innerText = username;
+
+    const logoutLink = document.querySelector('a[href="login.html"]');
+    if (logoutLink) {
+      logoutLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.removeItem('username');
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+      });
+    }
+
+    document.getElementById('issueType').addEventListener('change', function () {
+      const customIssueContainer = document.getElementById('customIssueContainer');
+      customIssueContainer.style.display = this.value === 'other' ? 'block' : 'none';
+    });
+
+    // Initialize Leaflet map
+    const map = L.map('map').setView([43.65107, -79.347015], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    let marker;
+    map.on('click', function (e) {
+      if (marker) marker.remove();
+      marker = L.marker(e.latlng).addTo(map);
+      document.getElementById('lat').value = e.latlng.lat;
+      document.getElementById('lng').value = e.latlng.lng;
+    });
+
+    // Submit Report
+    document.getElementById('reportForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+
+      const issue = formData.get('issueType') === 'other'
+        ? formData.get('customIssue')
+        : formData.get('issueType');
+
+      formData.set('issueType', issue);
+      formData.set('user', username);
+      formData.set('notify', document.getElementById('notify').checked); // ✅ Fixed checkbox
+
+      try {
+        const res = await fetch('http://localhost:5000/report', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to submit');
+
+        alert('✅ Report submitted successfully!');
+        form.reset();
+        if (marker) marker.remove();
+        document.getElementById('customIssueContainer').style.display = 'none';
+      } catch (err) {
+        alert('❌ Error submitting report');
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
